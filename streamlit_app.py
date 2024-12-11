@@ -36,7 +36,6 @@ def generate_flashcard_question(retries=3) -> dict:
                 messages=[{"role": "user", "content": prompt}]
             )
             content = response.choices[0].message['content']
-            
             # Phân tách câu hỏi và câu trả lời
             question, answer = content.split("Trả lời:", 1) if "Trả lời:" in content else (content, "Không có câu trả lời.")
             return {"question": question.strip(), "answer": answer.strip()}
@@ -46,18 +45,25 @@ def generate_flashcard_question(retries=3) -> dict:
 
 def display_flashcard(flashcard: dict, card_number: int, total_cards: int) -> None:
     """Hiển thị flashcard trên giao diện Streamlit"""
+    # Tách câu trả lời thành danh sách nếu có nhiều dòng
+    answer_lines = flashcard['answer'].split("\n")
+    formatted_answer = "".join([f"<li>{line.strip()}</li>" for line in answer_lines if line.strip() != ""])
+
     st.markdown(f"""
     <div style="border-radius: 10px; background-color: #f5f5f5; padding: 20px; text-align: left; font-size: 20px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); margin-bottom: 20px;">
         <strong>Flashcard {card_number}/{total_cards}</strong>
         <p><strong>🟡 Câu hỏi:</strong> {flashcard['question']}</p>
-        <p><strong>🟢 Trả lời:</strong> {flashcard['answer']}</p>
+        <p><strong>🟢 Trả lời:</strong></p>
+        <ul style="font-size: 18px; line-height: 1.6;">
+            {formatted_answer}
+        </ul>
     </div>
     """, unsafe_allow_html=True)
 
 def main():
     """Giao diện chính của Streamlit"""
-    st.title('📚 Flashcard Learning App (Slide View)')
-    st.markdown('**💪 Học với 5 flashcards mỗi lần. Nhấn "Start Learning" để bắt đầu học.**')
+    st.title('📚 Flashcard Learning IT')
+    st.markdown('**💪 Học tập thông qua các flashcard về mạng, Windows Server, Linux, và các chủ đề IT khác.**')
     st.write('🎉 Nhấn **Start Learning** để bắt đầu học. Nhấn **Next** để chuyển sang flashcard tiếp theo.')
 
     # Khởi tạo session state
@@ -69,18 +75,19 @@ def main():
 
     if st.button('🎉 Start Learning'):
         st.session_state['flashcard_count'] = 0
-        st.session_state['flashcard_list'] = [generate_flashcard_question() for _ in range(5)]  # Tải trước 10 flashcards
-
+        st.session_state['flashcard_list'] = [generate_flashcard_question() for _ in range(5)]  # Tạo trước 5 flashcard
+    
     if st.session_state['flashcard_count'] < len(st.session_state['flashcard_list']):
         current_flashcard = st.session_state['flashcard_count'] + 1
         flashcard = st.session_state['flashcard_list'][st.session_state['flashcard_count']]
-        display_flashcard(flashcard, current_flashcard, len(st.session_state['flashcard_list']))
+        display_flashcard(flashcard, current_flashcard, 30)
 
         if st.button('⏭️ Next', key=f'next_button_{current_flashcard}'):
             st.session_state['flashcard_count'] += 1
 
             if st.session_state['flashcard_count'] >= len(st.session_state['flashcard_list']):
                 st.success('✨ **Bạn đã hoàn thành tất cả các flashcard! Nhấn "Start Learning" để bắt đầu lại.** ✨')
+                st.session_state['flashcard_list'] = [generate_flashcard_question() for _ in range(5)]  # Nạp thêm 5 flashcards
     else:
         st.success('✨ **Bạn đã hoàn thành tất cả các flashcard! Nhấn "Start Learning" để bắt đầu lại.** ✨')
 
