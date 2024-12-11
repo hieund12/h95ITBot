@@ -2,7 +2,7 @@ import logging
 import openai
 import os
 import time
-import asyncio
+import asyncio  # Import asyncio để tạo event loop thủ công
 from telegram import Update, ForceReply
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from dotenv import load_dotenv  # Đọc API Key từ file .env
@@ -81,7 +81,7 @@ async def stop_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 # Gọi API ChatGPT để sinh câu hỏi ngẫu nhiên cho flashcard
 async def generate_flashcard_question() -> str:
-    """Gọi API của OpenAI để sinh flashcard"""
+    """Gọi API của OpenAI để sinh câu hỏi flashcard"""
     try:
         topics = [
             "mạng máy tính", 
@@ -92,7 +92,7 @@ async def generate_flashcard_question() -> str:
             "xử lý sự cố máy in", 
             "xử lý sự cố camera"
         ]
-        prompt = f"Tạo một câu flashcard ngắn về chủ đề ngẫu nhiên từ danh sách: {', '.join(topics)}"
+        prompt = f"Tạo một câu hỏi phỏng vấn ngắn về chủ đề ngẫu nhiên từ danh sách: {', '.join(topics)}"
         
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo", 
@@ -106,6 +106,13 @@ async def generate_flashcard_question() -> str:
 # Khởi chạy bot
 def main() -> None:
     """Khởi chạy bot"""
+    # Khởi tạo event loop cho thread hiện tại
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
     application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
     # Thêm các lệnh /start, /help, /flashcard và /stop
