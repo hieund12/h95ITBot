@@ -29,13 +29,14 @@ def generate_flashcard_question(retries=3) -> dict:
     for attempt in range(retries):
         try:
             topic = random.choice(flashcard_topics)
-            prompt = f"Tạo một câu hỏi và câu trả lời rõ ràng, cụ thể, dễ hiểu về chủ đề {topic}. Định dạng: 'Câu hỏi: [Nội dung câu hỏi] Trả lời: [Nội dung câu trả lời]'."
+            prompt = f"Tạo một câu hỏi và câu trả lời rõ ràng, cụ thể, dễ hiểu về chủ đề {topic}. Định dạng: 'Câu hỏi: [Nội dung câu hỏi] Trả lời: [Nội dung câu trả lời]'"
             
             response = openai.ChatCompletion.create(
                 model="gpt-4", 
                 messages=[{"role": "user", "content": prompt}]
             )
             content = response.choices[0].message['content']
+            
             # Phân tách câu hỏi và câu trả lời
             question, answer = content.split("Trả lời:", 1) if "Trả lời:" in content else (content, "Không có câu trả lời.")
             return {"question": question.strip(), "answer": answer.strip()}
@@ -56,7 +57,7 @@ def display_flashcard(flashcard: dict, card_number: int, total_cards: int) -> No
 def main():
     """Giao diện chính của Streamlit"""
     st.title('📚 Flashcard Learning App (Slide View)')
-    st.markdown('**💪 Có giới hạn số lần học, nhấn "Start Learning" để bắt đầu học.**')
+    st.markdown('**💪 Học với 10 flashcards mỗi lần. Nhấn "Start Learning" để bắt đầu học.**')
     st.write('🎉 Nhấn **Start Learning** để bắt đầu học. Nhấn **Next** để chuyển sang flashcard tiếp theo.')
 
     # Khởi tạo session state
@@ -68,12 +69,12 @@ def main():
 
     if st.button('🎉 Start Learning'):
         st.session_state['flashcard_count'] = 0
-        st.session_state['flashcard_list'] = [generate_flashcard_question() for _ in range(30)]
-        
+        st.session_state['flashcard_list'] = [generate_flashcard_question() for _ in range(10)]  # Giới hạn 10 flashcards mỗi lần
+
     if st.session_state['flashcard_count'] < len(st.session_state['flashcard_list']):
         current_flashcard = st.session_state['flashcard_count'] + 1
         flashcard = st.session_state['flashcard_list'][st.session_state['flashcard_count']]
-        display_flashcard(flashcard, current_flashcard, 20)
+        display_flashcard(flashcard, current_flashcard, len(st.session_state['flashcard_list']))
 
         if st.button('⏭️ Next', key=f'next_button_{current_flashcard}'):
             st.session_state['flashcard_count'] += 1
