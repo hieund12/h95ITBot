@@ -11,6 +11,10 @@ load_dotenv()
 # Lấy thông tin từ file .env
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
+# Kiểm tra API Key
+if not OPENAI_API_KEY:
+    st.error('❌ API Key không tìm thấy. Vui lòng kiểm tra file .env và chắc chắn rằng bạn đã thêm OPENAI_API_KEY')
+
 # Cấu hình API Key của OpenAI
 openai.api_key = OPENAI_API_KEY
 
@@ -25,19 +29,22 @@ flashcard_topics = [
     "xử lý sự cố camera"
 ]
 
-def generate_flashcard_question() -> str:
+def generate_flashcard_question(retries=3) -> str:
     """Gọi API của OpenAI để sinh câu hỏi flashcard"""
-    try:
-        topic = random.choice(flashcard_topics)
-        prompt = f"Tạo một câu hỏi ngắn, thân thiện và dễ hiểu về chủ đề {topic}. Định dạng: Câu hỏi ngắn + câu trả lời đầy đủ."
-        
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo", 
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message['content']
-    except Exception as e:
-        return "Không thể tạo câu hỏi flashcard. Vui lòng thử lại sau."
+    for attempt in range(retries):
+        try:
+            topic = random.choice(flashcard_topics)
+            prompt = f"Tạo một câu hỏi ngắn, thân thiện và dễ hiểu về chủ đề {topic}. Định dạng: Câu hỏi ngắn + câu trả lời đầy đủ."
+            
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",  # Đảm bảo mô hình chính xác (gpt-3.5-turbo hoặc gpt-4)
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.choices[0].message['content']
+        except Exception as e:
+            st.warning(f"⚠️ Lỗi khi tạo flashcard (thử lần {attempt + 1} / {retries}): {e}")
+            time.sleep(2)  # Đợi 2 giây trước khi thử lại
+    return "❌ Không thể tạo câu hỏi flashcard sau nhiều lần thử. Vui lòng thử lại sau."
 
 def display_flashcard(flashcard: str, card_number: int, total_cards: int) -> None:
     """Hiển thị flashcard trên giao diện Streamlit"""
