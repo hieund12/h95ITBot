@@ -4,7 +4,7 @@ import os
 import time
 import threading
 from telegram import Update, ForceReply
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackContext
 
 # Đọc API Key từ file .env
 from dotenv import load_dotenv
