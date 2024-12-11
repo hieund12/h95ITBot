@@ -14,6 +14,10 @@ load_dotenv()
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
+# Kiểm tra token Telegram
+if not TELEGRAM_BOT_TOKEN:
+    raise ValueError("TELEGRAM_BOT_TOKEN không được tìm thấy trong file .env hoặc bị trống. Kiểm tra lại.")
+
 # Cấu hình API Key của OpenAI
 openai.api_key = OPENAI_API_KEY
 
@@ -29,45 +33,19 @@ flashcard_sessions = {}
 # Lệnh /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Gửi tin nhắn chào mừng khi người dùng nhập /start"""
-    await update.message.reply_text(
-        'Xin chào! Tôi là chatbot chuyên cung cấp kiến thức về mạng, quản trị hệ thống, bảo mật và xử lý sự cố máy tính, máy in, camera. Hãy nhập /flashcard để bắt đầu phiên học flashcard hoặc hỏi bất kỳ điều gì!'
-    )
+    await update.message.reply_text('Xin chào! Tôi là chatbot hỗ trợ học tập.')
 
 # Lệnh /help
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Gửi tin nhắn trợ giúp"""
-    await update.message.reply_text(
-        'Hãy nhập bất kỳ câu hỏi nào về mạng, quản trị hệ thống, bảo mật và các chủ đề như Windows Server 2019, Linux, xử lý sự cố máy in, máy tính, camera. Hoặc nhập /flashcard để học liên tục các kiến thức trong 10 phút!'
-    )
+    await update.message.reply_text('Bạn có thể nhập /flashcard để bắt đầu học flashcard.')
 
 # Lệnh /flashcard
 async def flashcard_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Khởi động phiên flashcard"""
     chat_id = update.effective_chat.id
-
-    if chat_id in flashcard_sessions:
-        await update.message.reply_text('Bạn đã có một phiên flashcard đang hoạt động. Vui lòng nhập /stop để dừng trước khi bắt đầu phiên mới.')
-        return
-
     flashcard_sessions[chat_id] = True
-    await update.message.reply_text('Bắt đầu phiên flashcard! Mỗi 30 giây, tôi sẽ gửi một câu hỏi hoặc kiến thức cho bạn. Phiên sẽ tự động dừng sau 10 phút. Nhập /stop để dừng ngay lập tức.')
-
-    async def send_flashcards():
-        """Gửi flashcard mỗi 30 giây trong vòng 10 phút"""
-        start_time = time.time()
-        while flashcard_sessions.get(chat_id, False):
-            if time.time() - start_time > 600:  # Dừng sau 10 phút
-                await context.bot.send_message(chat_id=chat_id, text='Phiên flashcard đã kết thúc. Nhập /flashcard để học tiếp.')
-                break
-
-            # Sinh câu hỏi từ OpenAI
-            question = await generate_flashcard_question()
-            await context.bot.send_message(chat_id=chat_id, text=question)
-            await asyncio.sleep(30)  # Đợi 30 giây (không chặn event loop)
-
-        flashcard_sessions.pop(chat_id, None)  # Xóa phiên khỏi danh sách
-
-    asyncio.create_task(send_flashcards())
+    await update.message.reply_text('Bắt đầu phiên flashcard! Mỗi 30 giây, tôi sẽ gửi một câu hỏi cho bạn. Nhập /stop để dừng.')
 
 # Lệnh /stop
 async def stop_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -83,16 +61,7 @@ async def stop_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 async def generate_flashcard_question() -> str:
     """Gọi API của OpenAI để sinh câu hỏi flashcard"""
     try:
-        topics = [
-            "mạng máy tính", 
-            "Windows Server 2019", 
-            "quản trị Linux", 
-            "lắp ráp máy tính", 
-            "xử lý sự cố máy tính", 
-            "xử lý sự cố máy in", 
-            "xử lý sự cố camera"
-        ]
-        prompt = f"Tạo một câu hỏi phỏng vấn ngắn về chủ đề ngẫu nhiên từ danh sách: {', '.join(topics)}"
+        prompt = "Tạo một câu hỏi phỏng vấn ngắn về chủ đề mạng máy tính."
         
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo", 
@@ -113,9 +82,8 @@ async def run_application():
     application.add_handler(CommandHandler("flashcard", flashcard_command))
     application.add_handler(CommandHandler("stop", stop_command))
 
-    await application.initialize()
-    await application.start()
-    await application.idle()
+    # Dùng run_polling để thay thế start() + idle()
+    await application.run_polling()
 
 def main() -> None:
     """Chạy ứng dụng asyncio trong luồng chính"""
