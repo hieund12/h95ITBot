@@ -104,15 +104,7 @@ async def generate_flashcard_question() -> str:
         return "Không thể tạo câu hỏi flashcard. Vui lòng thử lại sau."
 
 # Khởi chạy bot
-def main() -> None:
-    """Khởi chạy bot"""
-    # Khởi tạo event loop cho thread hiện tại
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
+async def run_application():
     application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
     # Thêm các lệnh /start, /help, /flashcard và /stop
@@ -121,8 +113,13 @@ def main() -> None:
     application.add_handler(CommandHandler("flashcard", flashcard_command))
     application.add_handler(CommandHandler("stop", stop_command))
 
-    # Bắt đầu bot
-    application.run_polling()
+    await application.initialize()
+    await application.start()
+    await application.idle()
+
+def main() -> None:
+    """Chạy ứng dụng asyncio trong luồng chính"""
+    asyncio.run(run_application())
 
 if __name__ == '__main__':
     main()
