@@ -112,10 +112,12 @@ def main():
                         st.session_state['flashcard_count'] += 1
                         if st.session_state['flashcard_count'] < st.session_state['daily_flashcard_limit']:
                             st.session_state['flashcard_text'] = generate_flashcard_question()
+                            st.experimental_rerun()
                         else:
                             st.success('✨ **Bạn đã hoàn thành tất cả các flashcard!** ✨')
                             st.session_state['start_time'] = None
                             st.session_state['next_available_time'] = datetime.now() + timedelta(hours=12)
+                            st.experimental_rerun()
                 else:
                     st.success('✨ **Bạn đã hoàn thành tất cả các flashcard cho hôm nay!** ✨')
                     st.session_state['start_time'] = None
