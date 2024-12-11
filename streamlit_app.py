@@ -70,11 +70,13 @@ def main():
     if 'next_available_time' not in st.session_state:
         st.session_state['next_available_time'] = None
 
+    # Nếu đã đạt giới hạn học 30 flashcards/ngày
     if st.session_state['next_available_time'] and datetime.now() < st.session_state['next_available_time']:
         time_left = st.session_state['next_available_time'] - datetime.now()
         hours, remainder = divmod(time_left.seconds, 3600)
         minutes, _ = divmod(remainder, 60)
         st.warning(f"⏳ Vui lòng quay lại sau {hours} giờ {minutes} phút để tiếp tục học.")
+        st.stop()
     else:
         if st.button('🎉 Start Learning'):
             st.session_state['flashcard_count'] = 0
