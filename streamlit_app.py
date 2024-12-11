@@ -82,12 +82,21 @@ async def run_application():
     application.add_handler(CommandHandler("flashcard", flashcard_command))
     application.add_handler(CommandHandler("stop", stop_command))
 
-    # Dùng run_polling để thay thế start() + idle()
-    await application.run_polling()
+    # Thay vì run_polling(), sử dụng start_polling() và giữ vòng lặp hoạt động
+    await application.start_polling()
+    try:
+        # Giữ bot hoạt động trong 3600 giây (1 giờ)
+        while True:
+            await asyncio.sleep(3600)
+    except KeyboardInterrupt:
+        logging.info("Dừng bot...")
+    finally:
+        await application.stop()
 
 def main() -> None:
     """Chạy ứng dụng asyncio trong luồng chính"""
-    asyncio.run(run_application())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(run_application())
 
 if __name__ == '__main__':
     main()
