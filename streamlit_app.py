@@ -80,7 +80,7 @@ def main():
     if st.session_state['flashcard_count'] < len(st.session_state['flashcard_list']):
         current_flashcard = st.session_state['flashcard_count'] + 1
         flashcard = st.session_state['flashcard_list'][st.session_state['flashcard_count']]
-        display_flashcard(flashcard, current_flashcard, 30)
+        display_flashcard(flashcard, current_flashcard, 5)
 
         if st.button('⏭️ Next', key=f'next_button_{current_flashcard}'):
             st.session_state['flashcard_count'] += 1
