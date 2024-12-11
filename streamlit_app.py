@@ -2,7 +2,6 @@ import streamlit as st
 import openai
 import os
 import random
-from datetime import datetime, timedelta
 from dotenv import load_dotenv  # Đọc API Key từ file .env
 
 # Đọc thông tin từ file .env
@@ -57,7 +56,7 @@ def display_flashcard(flashcard: dict, card_number: int, total_cards: int) -> No
 def main():
     """Giao diện chính của Streamlit"""
     st.title('📚 Flashcard Learning App (Slide View)')
-    st.markdown('**💪 Bạn sẽ có tối đa 30 flashcards/ngày.**')
+    st.markdown('**💪 Không giới hạn số lần học, nhấn "Start Learning" để bắt đầu học.**')
     st.write('🎉 Nhấn **Start Learning** để bắt đầu học. Nhấn **Next** để chuyển sang flashcard tiếp theo.')
 
     # Khởi tạo session state
@@ -67,37 +66,22 @@ def main():
     if 'flashcard_count' not in st.session_state:
         st.session_state['flashcard_count'] = 0
 
-    if 'next_available_time' not in st.session_state:
-        st.session_state['next_available_time'] = None
-
-    # Nếu đã đạt giới hạn học 30 flashcards/ngày
-    if st.session_state['next_available_time'] and datetime.now() < st.session_state['next_available_time']:
-        time_left = st.session_state['next_available_time'] - datetime.now()
-        hours, remainder = divmod(time_left.seconds, 3600)
-        minutes, _ = divmod(remainder, 60)
-        st.warning(f"⏳ Vui lòng quay lại sau {hours} giờ {minutes} phút để tiếp tục học.")
-        st.stop()
-    else:
-        if st.button('🎉 Start Learning'):
-            st.session_state['flashcard_count'] = 0
-            st.session_state['flashcard_list'] = [generate_flashcard_question() for _ in range(30)]
+    if st.button('🎉 Start Learning'):
+        st.session_state['flashcard_count'] = 0
+        st.session_state['flashcard_list'] = [generate_flashcard_question() for _ in range(30)]
         
-        if st.session_state['flashcard_count'] < len(st.session_state['flashcard_list']):
-            current_flashcard = st.session_state['flashcard_count'] + 1
-            flashcard = st.session_state['flashcard_list'][st.session_state['flashcard_count']]
-            display_flashcard(flashcard, current_flashcard, 30)
+    if st.session_state['flashcard_count'] < len(st.session_state['flashcard_list']):
+        current_flashcard = st.session_state['flashcard_count'] + 1
+        flashcard = st.session_state['flashcard_list'][st.session_state['flashcard_count']]
+        display_flashcard(flashcard, current_flashcard, 30)
 
-            if st.button('⏭️ Next', key=f'next_button_{current_flashcard}'):
-                st.session_state['flashcard_count'] += 1
+        if st.button('⏭️ Next', key=f'next_button_{current_flashcard}'):
+            st.session_state['flashcard_count'] += 1
 
-                if st.session_state['flashcard_count'] >= 30:
-                    st.success('✨ **Bạn đã hoàn thành tất cả các flashcard!** ✨')
-                    st.session_state['next_available_time'] = datetime.now() + timedelta(hours=12)
-                    st.stop()
-        else:
-            st.success('✨ **Bạn đã hoàn thành tất cả các flashcard cho hôm nay!** ✨')
-            st.session_state['next_available_time'] = datetime.now() + timedelta(hours=12)
-            st.stop()
+            if st.session_state['flashcard_count'] >= len(st.session_state['flashcard_list']):
+                st.success('✨ **Bạn đã hoàn thành tất cả các flashcard! Nhấn "Start Learning" để bắt đầu lại.** ✨')
+    else:
+        st.success('✨ **Bạn đã hoàn thành tất cả các flashcard! Nhấn "Start Learning" để bắt đầu lại.** ✨')
 
 if __name__ == '__main__':
     main()
