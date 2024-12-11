@@ -1,0 +1,6 @@
+openai
+streamlit
+python-telegram-bot
+flask
+waitress
+python-dotenv
