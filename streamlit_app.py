@@ -36,11 +36,15 @@ def generate_flashcard_question(retries=3) -> str:
             topic = random.choice(flashcard_topics)
             prompt = f"Tạo một câu hỏi ngắn, thân thiện và dễ hiểu về chủ đề {topic}. Định dạng: Câu hỏi ngắn + câu trả lời đầy đủ."
             
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",  # Đảm bảo mô hình chính xác (gpt-3.5-turbo hoặc gpt-4)
-                messages=[{"role": "user", "content": prompt}]
+            response = openai.Completion.create(
+                engine="text-davinci-003",  # Dùng text-davinci-003 hoặc gpt-3.5-turbo
+                prompt=prompt,
+                max_tokens=100,  # Giới hạn số token trả về
+                n=1,  # Trả về 1 kết quả
+                stop=None,
+                temperature=0.7  # Mức độ sáng tạo
             )
-            return response.choices[0].message['content']
+            return response.choices[0].text.strip()
         except Exception as e:
             st.warning(f"⚠️ Lỗi khi tạo flashcard (thử lần {attempt + 1} / {retries}): {e}")
             time.sleep(2)  # Đợi 2 giây trước khi thử lại
