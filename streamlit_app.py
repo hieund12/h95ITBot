@@ -34,16 +34,17 @@ def generate_flashcard_question(retries=3) -> str:
     for attempt in range(retries):
         try:
             topic = random.choice(flashcard_topics)
-            prompt = f"Tạo một câu hỏi ngắn, thân thiện và dễ hiểu về chủ đề {topic}. Định dạng: Câu hỏi ngắn + câu trả lời đầy đủ."
+            prompt = f"Tạo một câu hỏi ngắn và một câu trả lời đầy đủ, dễ hiểu, ngắn gọn nhưng không quá ngắn. Câu trả lời phải rõ ràng, kết thúc tự nhiên, không bị ngắt đột ngột. Chủ đề: {topic}. Định dạng: Câu hỏi ngắn + câu trả lời đầy đủ."
             
             response = openai.ChatCompletion.create(
-                model="gpt-4",  # Hoặc "gpt-4" nếu bạn có quyền truy cập
+                model="gpt-3.5-turbo",  # Hoặc "gpt-4" nếu bạn có quyền truy cập
                 messages=[
-                    {"role": "system", "content": "Bạn là AI chuyên tạo flashcard học tập."},
+                    {"role": "system", "content": "Bạn là AI chuyên tạo flashcard học tập ngắn gọn, đầy đủ, kết thúc tự nhiên và dễ hiểu."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=100,
-                temperature=0.7
+                max_tokens=150,  # Đủ không gian để câu trả lời đầy đủ
+                temperature=0.5,  # Giảm độ sáng tạo để đảm bảo tính ổn định
+                stop=["\n\n"]  # Dừng sau khi kết thúc 1 đoạn
             )
             return response.choices[0].message['content'].strip()
         except Exception as e:
@@ -114,9 +115,6 @@ def main():
                     else:
                         st.success('✨ **Bạn đã hoàn thành tất cả các flashcard!** ✨')
                         st.session_state['start_time'] = None
-            else:
-                st.success('✨ **Bạn đã hoàn thành tất cả các flashcard!** ✨')
-                st.session_state['start_time'] = None
 
 if __name__ == '__main__':
     main()
