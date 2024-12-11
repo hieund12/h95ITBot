@@ -56,7 +56,7 @@ def display_flashcard(flashcard: dict, card_number: int, total_cards: int) -> No
 def main():
     """Giao diện chính của Streamlit"""
     st.title('📚 Flashcard Learning App (Slide View)')
-    st.markdown('**💪 Không giới hạn số lần học, nhấn "Start Learning" để bắt đầu học.**')
+    st.markdown('**💪 Có giới hạn số lần học, nhấn "Start Learning" để bắt đầu học.**')
     st.write('🎉 Nhấn **Start Learning** để bắt đầu học. Nhấn **Next** để chuyển sang flashcard tiếp theo.')
 
     # Khởi tạo session state
@@ -73,7 +73,7 @@ def main():
     if st.session_state['flashcard_count'] < len(st.session_state['flashcard_list']):
         current_flashcard = st.session_state['flashcard_count'] + 1
         flashcard = st.session_state['flashcard_list'][st.session_state['flashcard_count']]
-        display_flashcard(flashcard, current_flashcard, 30)
+        display_flashcard(flashcard, current_flashcard, 20)
 
         if st.button('⏭️ Next', key=f'next_button_{current_flashcard}'):
             st.session_state['flashcard_count'] += 1
