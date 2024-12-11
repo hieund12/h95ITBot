@@ -1,3 +1,4 @@
+import asyncio  # Thêm asyncio để sử dụng event loop
 import logging
 import openai
 import os
@@ -77,7 +78,7 @@ def webhook():
 
 # Chạy Flask và Streamlit song song
 def run_flask():
-    PORT = int(os.getenv('PORT', '5000'))  # Đổi cổng thành 5000
+    PORT = int(os.getenv('PORT', '5050'))  # Đổi cổng thành 5050 để tránh xung đột
     app.run(host='0.0.0.0', port=PORT)
 
 def run_streamlit():
@@ -85,10 +86,12 @@ def run_streamlit():
     st.write('Sử dụng bot để nhận câu hỏi phỏng vấn và flashcard trực tiếp từ Telegram.')
 
 def run_telegram_bot():
-    asyncio.run(application.run_polling())
+    loop = asyncio.new_event_loop()  # Tạo event loop mới
+    asyncio.set_event_loop(loop)  # Đặt event loop cho thread
+    loop.run_until_complete(application.run_polling())
 
 if __name__ == '__main__':
-    # Chạy Flask trên cổng 5000 và Streamlit trên cổng 8501
+    # Chạy Flask trên cổng 5050 và Streamlit trên cổng 8501
     threading.Thread(target=run_flask).start()
     threading.Thread(target=run_telegram_bot).start()
     run_streamlit()
