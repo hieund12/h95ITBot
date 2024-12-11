@@ -2,7 +2,6 @@ import asyncio  # Thêm asyncio để sử dụng event loop
 import logging
 import openai
 import os
-import time
 import threading
 from telegram import Update, Bot
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
@@ -85,13 +84,10 @@ def run_streamlit():
     st.title('Telegram Bot Controller')
     st.write('Sử dụng bot để nhận câu hỏi phỏng vấn và flashcard trực tiếp từ Telegram.')
 
-def run_telegram_bot():
-    loop = asyncio.new_event_loop()  # Tạo event loop mới
-    asyncio.set_event_loop(loop)  # Đặt event loop cho thread
-    loop.run_until_complete(application.run_polling())
-
 if __name__ == '__main__':
-    # Chạy Flask trên cổng 5050 và Streamlit trên cổng 8501
+    # Chạy Flask và Streamlit trên luồng phụ
     threading.Thread(target=run_flask).start()
-    threading.Thread(target=run_telegram_bot).start()
-    run_streamlit()
+    threading.Thread(target=run_streamlit).start()
+    
+    # Chạy Telegram bot trong main thread
+    application.run_polling()
