@@ -51,21 +51,18 @@ def display_flashcard(flashcard: dict, card_number: int, total_cards: int) -> No
     st.markdown(f"""
     <div style="border-radius: 10px; background-color: #f5f5f5; padding: 20px; text-align: left; font-size: 20px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); margin-bottom: 20px;">
         <strong>Flashcard {card_number}/{total_cards}</strong>
-        <p><strong>Câu hỏi:</strong> {flashcard['question']}</p>
-        <p><strong>Trả lời:</strong> {flashcard['answer']}</p>
+        <p><strong>🟡 Câu hỏi:</strong> {flashcard['question']}</p>
+        <p><strong>🟢 Trả lời:</strong> {flashcard['answer']}</p>
     </div>
     """, unsafe_allow_html=True)
 
 def main():
     """Giao diện chính của Streamlit"""
     st.title('📚 Flashcard Learning App (Slide View)')
-    st.markdown('**💪 Mỗi 20 giây sẽ có 1 flashcard mới trong vòng 10 phút.**')
-    st.write('🎉 Nhấn **Start Learning** để bắt đầu học. Flashcard sẽ tự động chuyển đổi sau 20 giây.')
+    st.markdown('**💪 Bạn sẽ có tối đa 20 flashcards/ngày.**')
+    st.write('🎉 Nhấn **Start Learning** để bắt đầu học. Nhấn **Next** để chuyển sang flashcard tiếp theo.')
 
     # Khởi tạo session state
-    if 'start_time' not in st.session_state:
-        st.session_state['start_time'] = None
-
     if 'flashcard_count' not in st.session_state:
         st.session_state['flashcard_count'] = 0
 
@@ -85,43 +82,26 @@ def main():
         st.warning(f"⏳ Vui lòng quay lại sau {hours} giờ {minutes} phút để tiếp tục học.")
     else:
         if st.button('🎉 Start Learning'):
-            st.session_state['start_time'] = time.time()
             st.session_state['flashcard_count'] = 0
             st.session_state['flashcard_text'] = generate_flashcard_question()
 
-        if st.session_state['start_time'] is not None:
-            time_elapsed = time.time() - st.session_state['start_time']
-            remaining_time = max(0, 600 - int(time_elapsed))  # 10 phút = 600 giây
-            minutes, seconds = divmod(remaining_time, 60)
-            
-            st.write(f'⏰ **Thời gian còn lại: {minutes} phút {seconds} giây**')
+        if st.session_state['flashcard_count'] < st.session_state['daily_flashcard_limit']:
+            current_flashcard = st.session_state['flashcard_count'] + 1
+            display_flashcard(st.session_state['flashcard_text'], current_flashcard, st.session_state['daily_flashcard_limit'])
 
-            if remaining_time == 0:
-                st.success('🎉 **Hết thời gian học! Nhấn "Start Learning" để bắt đầu phiên học mới.**')
-                st.session_state['start_time'] = None
-            else:
-                current_flashcard = st.session_state['flashcard_count'] + 1
-
-                if current_flashcard <= st.session_state['daily_flashcard_limit']:
-                    display_flashcard(st.session_state['flashcard_text'], current_flashcard, st.session_state['daily_flashcard_limit'])
-
-                    countdown = 20 - (int(time.time() - st.session_state['start_time']) % 20)
-                    st.write(f'🕒 **Chuyển flashcard tiếp theo sau: {countdown} giây**')
-
-                    if countdown == 0:
-                        st.session_state['flashcard_count'] += 1
-                        if st.session_state['flashcard_count'] < st.session_state['daily_flashcard_limit']:
-                            st.session_state['flashcard_text'] = generate_flashcard_question()
-                            st.experimental_rerun()
-                        else:
-                            st.success('✨ **Bạn đã hoàn thành tất cả các flashcard!** ✨')
-                            st.session_state['start_time'] = None
-                            st.session_state['next_available_time'] = datetime.now() + timedelta(hours=12)
-                            st.experimental_rerun()
+            if st.button('⏭️ Next', key=f'next_button_{current_flashcard}'):
+                st.session_state['flashcard_count'] += 1
+                if st.session_state['flashcard_count'] < st.session_state['daily_flashcard_limit']:
+                    st.session_state['flashcard_text'] = generate_flashcard_question()
+                    st.experimental_rerun()
                 else:
-                    st.success('✨ **Bạn đã hoàn thành tất cả các flashcard cho hôm nay!** ✨')
-                    st.session_state['start_time'] = None
+                    st.success('✨ **Bạn đã hoàn thành tất cả các flashcard!** ✨')
                     st.session_state['next_available_time'] = datetime.now() + timedelta(hours=12)
+                    st.experimental_rerun()
+        else:
+            st.success('✨ **Bạn đã hoàn thành tất cả các flashcard cho hôm nay!** ✨')
+            st.session_state['next_available_time'] = datetime.now() + timedelta(hours=12)
+            st.stop()
 
 if __name__ == '__main__':
     main()
