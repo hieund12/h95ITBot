@@ -3,6 +3,7 @@ import openai
 import os
 import time
 import asyncio  # Import asyncio để tạo event loop thủ công
+import streamlit as st  # Giao diện Streamlit
 from telegram import Update, ForceReply
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from dotenv import load_dotenv  # Đọc API Key từ file .env
@@ -45,7 +46,18 @@ async def flashcard_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     """Khởi động phiên flashcard"""
     chat_id = update.effective_chat.id
     flashcard_sessions[chat_id] = True
-    await update.message.reply_text('Bắt đầu phiên flashcard! Mỗi 30 giây, tôi sẽ gửi một câu hỏi cho bạn. Nhập /stop để dừng.')
+    await update.message.reply_text('Bắt đầu phiên flashcard! Mỗi 30 giây, tôi sẽ gửi một câu hỏi cho bạn. Phiên này kéo dài 15 phút. Nhập /stop để dừng.')
+
+    start_time = time.time()
+    while flashcard_sessions.get(chat_id, False):
+        if time.time() - start_time > 900:  # Kết thúc sau 15 phút
+            await context.bot.send_message(chat_id=chat_id, text='Phiên học đã kết thúc. Nhập /flashcard để học tiếp.')
+            flashcard_sessions[chat_id] = False
+            break
+
+        question = await generate_flashcard_question()
+        await context.bot.send_message(chat_id=chat_id, text=question)
+        await asyncio.sleep(30)  # Gửi mỗi 30 giây
 
 # Lệnh /stop
 async def stop_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -95,8 +107,33 @@ async def run_application():
 
 def main() -> None:
     """Chạy ứng dụng asyncio trong luồng chính"""
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     loop.run_until_complete(run_application())
 
 if __name__ == '__main__':
-    main()
+    # Giao diện Streamlit
+    st.title('Flashcard Learning')
+    st.write('Nhấn nút bên dưới để bắt đầu học Flashcard trong vòng 15 phút.')
+    
+    if st.button('Start Learning'):
+        st.write('Phiên học đã bắt đầu! Hãy kiểm tra Telegram của bạn để nhận các câu hỏi flashcard.')
+        
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        async def start_learning_session():
+            """Khởi động phiên học flashcard từ Streamlit."""
+            chat_id = st.text_input("Nhập ID Chat Telegram của bạn")
+            if chat_id:
+                flashcard_sessions[chat_id] = True
+                start_time = time.time()
+                while flashcard_sessions.get(chat_id, False):
+                    if time.time() - start_time > 900:  # Kết thúc sau 15 phút
+                        flashcard_sessions[chat_id] = False
+                        break
+                    question = await generate_flashcard_question()
+                    await asyncio.sleep(30)  # Gửi câu hỏi mỗi 30 giây
+                st.write('Phiên học đã kết thúc. Nhấn "Start Learning" để học tiếp.')
+
+        loop.run_until_complete(start_learning_session())
