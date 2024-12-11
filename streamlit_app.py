@@ -60,7 +60,7 @@ def display_flashcard(flashcard: str, card_number: int, total_cards: int) -> Non
 
 def main():
     """Giao diện chính của Streamlit"""
-    st.title('📚 Flashcard Learning App (Slide View)')
+    st.title('📚 Flashcard Learning Slide View')
     st.markdown('**💪 Mỗi 30 giây sẽ có 1 flashcard mới trong vòng 10 phút.**')
     st.write('🎉 Nhấn **Start Learning** để bắt đầu học. Flashcard sẽ tự động chuyển đổi sau 30 giây.')
 
